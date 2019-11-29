@@ -1,0 +1,83 @@
+---
+title: "runs.test"
+author: "xinyi wu"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# 游程检验-检验随机性
+- 其他数据可转为0、1二元数据
+- H0：是随机的
+```{r}
+Wald_Wolfowitz_test <- function(y ,cut = 0){
+  if (cut != 0) x = (y> cut )*1  else x= y
+  N = length(x);k =1;
+  for (i in 1:(N-1)) 
+    if (x[i] != x[i+1])  k = k+1;r =k;#注意k是从1开始的，故这时的r是游程数
+  m = sum(1-x);n = N-m;
+  P1 = function(m,n,k){
+    2*choose(m-1,k-1)/choose(m+n,n)*choose(n-1,k-1)
+    };
+  P2 = function(m,n,k){
+    2*choose(m-1,k-1)*choose(n-1,k)/choose(m+n,n) +choose(m-1,k)*choose(n-1, k-1)/choose(m+n,n)
+    };
+  r2 = floor(r/2);
+  if(r2 ==r/2){
+    pv = 0; 
+    for(i in 1:r2)  pv = pv +P1(m,n,i);
+    for(i in 1:(r2-1))  pv = pv +P2(m,n,i)
+  } else {
+    pv = 0;
+    for(i in 1:r2) pv = pv +P1(m,n,i);
+    for(i in 1:(r2)) pv = pv +P2(m,n,i)
+  };
+  if(r2 == r/2) pv1 = 1-pv +P1(m,n,r2) else pv1 = 1-pv +P2(m,n,r2);
+  z = (r- 2*m*n/N-1)/sqrt(2*m*n*(2*m*n-m-n)/ (m+n)^2/ (m+n-1));#样本量大时，借助正态分布得到P值
+  ap1=pnorm(z) ;ap2=1-ap1 ;tpv=min(pv ,pv1)*2;
+  list (m =m,n =n,N =N,R =r ,#R为游程数，
+        Exact.pvalue1 =pv, Exact.pvalue2=pv1 , Aprox.pvalue1=ap1, Aprox.pvalue2=ap2,# Exact.pvalue1为p(R<= r)的精确值，Exact.pvalue2为p(R>= r)的精确值,Aprox.pvalue1为p(R<= r)的渐进值，Aprox.pvalue2为p(R>= r)的渐进值
+   Exact.2sided.pvalue =tpv, Approx.2sided.pvalue=min(ap1,ap2)*2) #Exact.2sided.pvalue为双边检验的精确P值
+}
+
+y <-c(rep(0,7),rep(1,6),rep(0,4),rep(1,4),0,0) 
+y
+y3<-c(1,0,0,1,1,1,1,0,0,0)
+Wald_Wolfowitz_test (y)
+Wald_Wolfowitz_test (y3)
+```
+
+# 用包进游程检验
+```{r}
+library(lawstat)
+par(mfrow=c(1,3))# mfrow一页多图,首先设定par(),例如par(mfrow=c(2,3)) 一个图版显示2行,3列
+y1<-rep(c(1,0),5)
+y2<-c(rep(1,5),rep(0,5))
+y3<-c(1,0,0,1,1,1,1,0,0,0)
+y <-c(rep(0,7),rep(1,6),rep(0,4),rep(1,4),0,0) 
+y
+runs.test(y1,plot.it=T)
+runs.test(y2,plot.it=T)
+runs.test(y3,plot.it=T)#比较这个包与前面公式写出来的，这里出来的P值是双边渐进P值
+runs.test(y,plot.it=T)#这里P值为2.2e-16，和上面结果不一样，而且图也没对，咋回事
+```
+
+# 数值型数据，用公式的方法和用包的方法
+```{r}
+data <- c(12.27,9.92,10.81,11.79,11.87,10.90,11.22,10.80,10.33,9.30,9.81,8.85,9.32,8.67,9.32,9.53,9.58,8.94,7.89,10.77)
+Wald_Wolfowitz_test (data,median(data))#cut那切成两半了
+data_fac <- (sign(data-median(data)))
+runs.test(data_fac)
+```
+
+
