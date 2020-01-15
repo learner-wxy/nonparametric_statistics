@@ -1,0 +1,34 @@
+---
+title: "Cox-Stuart趋势检验"
+output: github_document
+---
+
+# 一个观测值和相隔大约n/2的另一个观测值配对比较
+```{r}
+CS.test <- function(x){
+m = length(x)
+c = if(m/2-round(m/2)==0){m/2}else{(m -1)/2} ### 此处亦可用floor(m/2)代替round(m/2)
+d = if(m/2-round(m/2)==0){x[1:c]-x[(c -1):m]}else{x[1:(c-1)]-x[(c -1):m]}
+n1 = length(d[which(d > 0)]) ### n1 = length(which(d > 0))
+n2 = length(d[which(d < 0)])  
+n = n1 +n2
+s1 = sum(sign(d)== 1)#sign为取符号，
+s2 = sum(sign(d)== -1)
+if(n1 > n2){  
+  m1 = "one tail test:H1: decreasing" 
+  p.value = pbinom(n2,n,0.5)
+}else{
+  m1 = "one tail test:H1: increasing"
+  p.value = pbinom(n1,n,0.5)
+}
+m2 = "two tails test"
+s = min(s1,s2)
+p.value2 = 2*pbinom(s,n,0.5)
+if(n1==n2){p.value = 0.5;p.value2 = 1}
+  list(sign.test.type = m1,p.values.of.one.test = p.value,p.value.of.two.tail.test = p.value2,n1 = n1,n2 = n2,s1 = s1,s2 =s2)
+}# n1,n2与s1,s2计算方法不一样，但是表达同一个意思，且n1与s1值肯定一样的
+
+x <- c(30,31,33,35,31,30,68,60,65,67,66,64)
+CS.test(x)
+```
+
