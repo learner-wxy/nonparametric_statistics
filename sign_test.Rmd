@@ -1,0 +1,65 @@
+---
+title: "singn_test"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GitHub Documents
+
+```{r}
+data <-c(27.8,27.8,29.1,32.2,32.7,32.7,36.4,36.5,37.5,37.7,38.8,41.9,45.2, 45.8, 46.0, 47.6,
+         48.2, 49.9, 51.8, 52.7, 54.9 ,55.0 ,55.3, 55.5 ,58.2 ,60.8 ,62.7 ,63.5 ,64.6, 65.3 ,65.3 ,65.3,
+         65.4 ,66.2 ,66.7 ,67.7, 71.2, 71.7, 73.9 ,74.3 ,74.5 ,76.2 ,76.6, 76.8 ,77.7, 77.9 ,79.1, 80.9,
+         81.0,82.6,85.7,86.2,86.4,89.4,89.5,90.3,90.8,91.8,92.8,95.2,97.5,98.2,99.1,99.3,
+         100.0,100.6, 104.1, 104.6, 105.0, 109.4, 122.4
+) 
+```
+
+# 检验中位数是否大于64
+```{r}
+#先获取样本中位数，做比较，来写原假设与备择假设
+data_median <- median(data)
+data_median #为67.7大于64，那么s+会更多，选择k = s-的单侧检验
+```
+
+# H0：M <= M0=64  H1:M > M0=64
+```{r}
+p.value <- function(x,pi,m0){
+  s1 = sum(x < m0)#s1代表s-
+  s2 = sum(x > m0)
+  k = min(s1,s2)
+  n = s1 + s2 #n = sum(x),报错不是整型，sum求和多半不是整型，而二项分布中n是代表个数得是整数
+ #检验的是中位数故为0.5，若为下四分位数，则为0.25
+  pbinom(k,n,pi)
+}
+p.value(data,0.5,64)#得到0.04796182，再若alpha =0.05，比较，拒绝原假设，得结果
+```
+
+# 另网上的，全
+```{r}
+sign1.test <- function(x,pi,q0){
+  s1 = sum(x<q0)
+  s2 = sum(x>q0)  #S 的个数 
+  n  = s1 + s2     
+  p1 = pbinom(s1,n,pi)  ### 取检验统计量K=S-，计算 P（K<=s1）
+  p2 = 1-pbinom(s1-1,n,pi)   ### 计算 P（K>=s1）
+  if(p1 < p2){  
+    m1 = "one tail test:H1: Q > q0"
+  }else{
+    m1 = "one tail test:H1: Q < q0"
+  }
+  p.value = min(p1,p2)
+  m2 = "two tails test"
+  p.value2 = 2*p.value
+  list(sign.test.type = m1,p.values.of.one.test = p.value,p.value.of.two.tail.test = p.value2)
+}
+##以上便构建了符号检验的函数，接下来可以直接调用
+aaa <-c(36,31,25,28,36,40,32,41,26,35,35,32,87,33,35,32)##赋值
+x <-median(data)##获取样本中位数
+x
+sign1.test(aaa,0.5,37)
+```
+
