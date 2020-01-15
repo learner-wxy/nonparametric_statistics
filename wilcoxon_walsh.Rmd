@@ -1,0 +1,48 @@
+---
+title: "wilcoxon符号秩检验"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# wilcoxon符号秩检验
+```{r}
+y <- c(4.12,5.81 ,7.63 ,9.74 ,10.39 ,11.92 ,12.32, 12.89 ,13.54 ,14.45)
+median(y)#样本中位数为11.155
+```
+
+# H0:M <=8， H1：M >8
+```{r}
+wilcox.test(y-8,alt = "greater")#对于右侧单边检验H1:M>8,样本数据为y，零假设为8
+wilcox.test(y-8,alt = "less")#对于左侧单边检验
+#得到P值0.03223(右侧)，与alpha= 0.05比较，拒绝原假设
+```
+
+# walsh平均，用平均后的中位数估计总体中位数，或者得到置信区间(qsignrank与psignrank)
+```{r}
+walsh <- function(data){
+  n = length(data)
+  i =1
+  j =1
+  k =1
+  data_add = NULL
+  while(i <= n){
+    while(j <= i){   #注意这里，书上就是j<i，不然会有重复，i,j都遍历的话 
+      data_add[k] = (data[i] + data[j])/2
+  k = k +1
+  j = j +1
+    }
+    i = i +1
+    j = 1#这里一定要把j初始化为1,
+  }
+return(
+ summary(data_add)
+)
+}
+walsh(y)#返回扩展后的样本平均数为10.390，可作为总体平均数的估计值
+
+```
+
+
